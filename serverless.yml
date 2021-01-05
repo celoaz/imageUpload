@@ -1,0 +1,45 @@
+org: marceloazevedo
+app: s3imageupload-app
+service: s3ImageUpload
+
+provider:
+    name: aws
+    runtime: nodejs12.x
+    region: sa-east-1
+    stage: dev
+    environment:
+        imageUploadBucket: ${self:custom.imageUploadBucket}
+        region: ${self:provider.region}
+    iamRoleStatements:
+        - Effect: Allow
+          Action:
+              - dynamodb:*
+              - s3:*
+              - ses:*
+          Resource: '*'
+
+plugins:
+    - serverless-webpack
+
+package:
+    individually: true
+
+custom:
+    imageUploadBucket: eva-image-upload-bucket
+
+functions:
+    imageUpload:
+        handler: lambdas/endpoints/imageUpload.handler
+        events:
+            - http:
+                  path: image-upload
+                  method: POST
+                  cors: true
+
+resources:
+    Resources:
+        ImageUploadBucket:
+            Type: AWS::S3::Bucket
+            Properties:
+                BucketName: ${self:custom.imageUploadBucket}
+                AccessControl: PublicRead
